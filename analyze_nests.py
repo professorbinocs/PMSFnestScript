@@ -358,7 +358,7 @@ def analyze_nest_data(config):
     nest_changeover = datetime.datetime.strptime(timespan, "%Y-%m-%dT%H:%M:%SZ")
     date_now = datetime.date.today()
     time_delta = date_now - nest_changeover
-    while time_delta.hours > 336:
+    while time_delta.total_seconds()/3600 > 336:
         time_delta -= timedelta(hours=336)
     
     print("Overpass url:")
@@ -543,7 +543,7 @@ def analyze_nest_data(config):
 
         # Use data since last change:
         #This gives a unix timestamp of current time minus hours past since nest change
-        reset_time = int(time.time()) - (time_delta.hours*3600)
+        reset_time = int(time.time()) - (time_delta.total_seconds())
         # RDM uses pokestop_ids, MAD not
         if config['pokestop_pokemon']:
             progress(idx, areas_len, "({}/{}) {}".format(
@@ -615,7 +615,7 @@ def analyze_nest_data(config):
             "pokemon_id": int(area_poke[0]),
             "type": 0,
             "pokemon_count": int(area_poke[1]),
-            "pokemon_avg": area_poke[1] / float(time_delta.hours),
+            "pokemon_avg": area_poke[1] / float(time_delta.total_seconds()/3600),
             "current_time": current_time,
         }
         #print(sql)
