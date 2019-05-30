@@ -8,6 +8,7 @@ Refactored by M4d40
 
 
 from collections import defaultdict
+from datetime import datetime
 
 import argparse
 import json
@@ -160,7 +161,7 @@ def create_config(config_path):
     config_raw = ConfigParser()
     config_raw.read(DEFAULT_CONFIG)
     config_raw.read(config_path)
-    config['timespan'] = config_raw.getint(
+    config['timespan'] = config_raw.get(
         'Nest Config',
         'TIMESPAN_SINCE_CHANGE')
     config['min_pokemon'] = config_raw.getint(
@@ -353,6 +354,13 @@ def analyze_nest_data(config):
         config['p2_lon'],
         config['osm_date'],
     )
+
+    nest_changeover = datetime.datetime.strptime(timespan, "%Y-%m-%dT%H:%M:%SZ")
+    date_now = datetime.date.today()
+    time_delta = date_now - nest_changeover
+    while time_delta.hours > 336:
+        time_delta -= timedelta(hours=336)
+    
     print("Overpass url:")
     print(nest_url)
     print("Getting OSM Data...")
@@ -534,7 +542,8 @@ def analyze_nest_data(config):
         #print(nest_mons)
 
         # Use data since last change:
-        reset_time = int(time.time()) - (config['timespan']*3600)
+        #This gives a unix timestamp of current time minus hours past since nest change
+        reset_time = int(time.time()) - (time_delta.hours*3600)
         # RDM uses pokestop_ids, MAD not
         if config['pokestop_pokemon']:
             progress(idx, areas_len, "({}/{}) {}".format(
@@ -606,7 +615,7 @@ def analyze_nest_data(config):
             "pokemon_id": int(area_poke[0]),
             "type": 0,
             "pokemon_count": int(area_poke[1]),
-            "pokemon_avg": area_poke[1] / float(config['timespan']),
+            "pokemon_avg": area_poke[1] / float(time_delta.hours),
             "current_time": current_time,
         }
         #print(sql)
