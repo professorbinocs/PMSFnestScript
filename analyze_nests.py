@@ -456,6 +456,12 @@ def osm_uri(p1_lat, p1_lon, p2_lat, p2_lon, osm_date, relations=False):
 def analyze_nest_data(config):
     """ Analyze nest data """
 
+    nest_changeover = datetime.datetime.strptime(timespan, "%Y-%m-%dT%H:%M:%SZ")
+    date_now = datetime.date.today()
+    time_delta = date_now - nest_changeover
+    while time_delta.total_seconds()/3600 > 336:
+        time_delta -= timedelta(hours=336)
+
     def _city_progress(count, total, status=""):
         status = "[{}] {}".format(config["area_name"], status)
         progress(count, total, status)
@@ -866,7 +872,7 @@ def analyze_nest_data(config):
 
         # (Area_poke/timespan)*(24/scan_hours)
         poke_avg = round(
-            (poke_count / float(config['timespan'])) * (
+            (poke_count / float(time_delta.total_seconds()/3600)) * (
                 24.00 / float(config['scan_hours'])), 2)
 
         _city_progress(idx, areas_len, "({}/{}) {}".format(
